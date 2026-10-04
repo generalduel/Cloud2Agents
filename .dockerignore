@@ -1,0 +1,34 @@
+# dependencies & build
+node_modules
+.pnpm-store
+.next
+out
+dist
+build
+
+# env & secrets — keep `.env` in context for `docker/prod/Dockerfile` → `.env.production` copy; ignore overrides
+.env*
+!.env
+
+# git & editor
+.git
+.gitignore
+.cursor
+.idea
+*.md
+!README.md
+
+# tooling & caches
+.turbo
+.vercel
+coverage
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+
+# tests & misc
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx

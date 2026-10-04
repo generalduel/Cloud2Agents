@@ -1,0 +1,14 @@
+{
+    "recommendations": [
+        "zarifprogrammer.tailwind-snippets",
+        "bradlc.vscode-tailwindcss",
+        "burkeholland.simple-react-snippets",
+        "christian-kohler.npm-intellisense",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "dsznajder.es7-react-js-snippets",
+        "dbaeumer.vscode-eslint",
+        "aaron-bond.better-comments",
+        "wix.vscode-import-cost"
+    ]
+}

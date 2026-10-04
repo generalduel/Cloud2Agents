@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npx next:*)",
+      "Write(app/**/*)",
+      "Write(src/**/*)",
+      "Write(components/**/*)",
+      "Write(lib/**/*)",
+      "Write(public/**/*)",
+      "Read(next.config.js)",
+      "Read(package.json)",
+      "Read(tsconfig.json)",
+      "Edit(tailwind.config.js)"
+    ],
+    "deny": [
+      "Read(.env.production)",
+      "Read(.env.local)",
+      "Write(.env)",
+      "Bash(rm -rf:*)",
+      "Bash(npm publish:*)"
+    ]
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "NEXT_PUBLIC_APP_ENV": "development"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "echo '[Next.js 16] $(basename $(pwd))'"
+  }
+}

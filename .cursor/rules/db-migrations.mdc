@@ -1,0 +1,45 @@
+---
+description: Drizzle migration workflow — generate, migrate, and ship schema changes to kit users
+globs: src/db/schema/**,drizzle/**,drizzle.config.ts,package.json,docker/**/entrypoint*.sh
+alwaysApply: false
+---
+
+# Database migrations (Indie Kit)
+
+## Commands
+
+| Script | Use |
+|--------|-----|
+| `pnpm db:migrate` | Apply pending migrations (kit users after pull) |
+| `pnpm db:generate` | Create SQL + journal after `src/db/schema/` changes |
+| `pnpm db:push` | Solo prototyping only — **not** for kit releases |
+
+Run the full workflow: Cursor command **db-migrate** (`.cursor/commands/db-migrate.md`).
+
+## Maintainer (shipping schema changes)
+
+1. Edit `src/db/schema/{domain}.ts` (indexes on FKs, Zod for jsonb).
+2. `pnpm db:generate` — commit `drizzle/*.sql` and `drizzle/meta/_journal.json`.
+3. Edit generated SQL if data backfills or type transforms are needed.
+4. Test: `pnpm db:migrate` then `pnpm dev`.
+
+## Kit user (after git pull)
+
+```bash
+pnpm install
+pnpm db:migrate
+pnpm dev
+```
+
+Skip migrate: just `pnpm dev`. Docker: `SKIP_DB_MIGRATE=1` on the compose service.
+
+## Do not
+
+- Ship schema TS changes without matching `drizzle/` migration files.
+- Tell production users to use `db:push`.
+- Add `db:migrate` to `postinstall` (no `DATABASE_URL` at install time).
+- Hook migrate into `predev` — `pnpm dev` must not run migrations.
+
+## Docker
+
+- Docker dev entrypoint → `db:migrate` unless `SKIP_DB_MIGRATE=1`

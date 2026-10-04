@@ -1,0 +1,20 @@
+overrides:
+  adm-zip: ">=0.6.0"
+  vite: ">=8.0.16"
+  esbuild@<=0.24.2: ">=0.25.0"
+  next>postcss: ">=8.5.12"
+  # Upstream pins vulnerable versions (no fixed release yet) — float to patched ranges
+  "@react-email/ui>next": "^16.3.6"
+  satori>fflate: "^0.7.5"
+  ws: "^8.20.1"
+
+onlyBuiltDependencies:
+  - "@sentry/cli"
+  - "@tailwindcss/oxide"
+  - argon2
+  - inngest-cli
+  - msw
+
+ignoredBuiltDependencies:
+  - esbuild
+  - sharp

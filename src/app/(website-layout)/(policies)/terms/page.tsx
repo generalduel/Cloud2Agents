@@ -1,0 +1,71 @@
+import { getPolicyBySlug } from "@/lib/mdx/policies";
+import { format } from "date-fns";
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import { appConfig } from "@/lib/config";
+import { WebPageJsonLd } from "@/components/seo/web-page-json-ld";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const policy = await getPolicyBySlug("terms");
+  if (!policy) return {};
+
+  const ogImage = `${process.env.NEXT_PUBLIC_APP_URL}/images/og.png`;
+
+  return {
+    title: policy.frontmatter.title,
+    description: policy.frontmatter.description,
+    openGraph: {
+      title: policy.frontmatter.title,
+      description: policy.frontmatter.description,
+      type: "website",
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/terms`,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: policy.frontmatter.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: policy.frontmatter.title,
+      description: policy.frontmatter.description,
+      images: [ogImage],
+    },
+    alternates: {
+      canonical: `${process.env.NEXT_PUBLIC_APP_URL}/terms`,
+    },
+  };
+}
+
+export default async function TermsPage() {
+  const policy = await getPolicyBySlug("terms");
+  
+  if (!policy) {
+    notFound();
+  }
+
+  return (
+    <>
+      <WebPageJsonLd
+        id={`${process.env.NEXT_PUBLIC_APP_URL}/terms`}
+        title={policy.frontmatter.title}
+        description={policy.frontmatter.description}
+        lastUpdated={policy.frontmatter.lastUpdated}
+        isAccessibleForFree={true}
+      />
+      <header className="mb-12 space-y-4 text-center">
+        <h1 className="text-4xl font-semibold md:text-5xl">{policy.frontmatter.title}</h1>
+        <p className="text-sm text-muted-foreground">
+          Last updated: {format(new Date(policy.frontmatter.lastUpdated), "MMMM d, yyyy")}
+        </p>
+      </header>
+
+      <main className="policy-content">
+        {policy.content}
+      </main>
+    </>
+  );
+}

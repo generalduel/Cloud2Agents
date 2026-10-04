@@ -1,0 +1,64 @@
+# Local dev: Postgres + app (same as pnpm dev:docker)
+#
+# From repo root:
+#   docker compose -f docker/dev/compose.yaml up --build
+#
+# URLs: http://localhost:3000 (Next), :8288 (Inngest), :3001 (React Email), :5432 (Postgres)
+#
+# DATABASE_URL is set for the Docker network (hostname `postgres`). Other vars come from ../../.env.local if present.
+# App runtime: Node 24 (docker/dev/Dockerfile).
+# Named volume for node_modules (Linux). First container start seeds from the image; later starts skip pnpm.
+# New deps: `docker compose exec app pnpm install` or `docker compose down -v` then up --build
+
+name: indie-kit-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: indiekit
+      POSTGRES_PASSWORD: indiekit
+      POSTGRES_DB: indiekit
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U indiekit -d indiekit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ../..
+      dockerfile: docker/dev/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      CI: "true"
+      DATABASE_URL: postgresql://indiekit:indiekit@postgres:5432/indiekit
+      BETTER_AUTH_SECRET: cpEhZk3RtXD2hgT6CamGnVT4Zb+NIeGtgOn958nYsvE=
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_SIGNIN_ENABLED: true
+    env_file:
+      - path: ../../.env.local
+        required: false
+    ports:
+      - "3000:3000"
+      - "8288:8288"
+      - "3001:3001"
+    volumes:
+      - ../../:/app
+      - app_node_modules:/app/node_modules
+      - app_next:/app/.next
+    init: true
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+  app_node_modules:
+  app_next:

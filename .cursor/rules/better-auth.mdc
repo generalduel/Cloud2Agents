@@ -1,0 +1,104 @@
+---
+description: Better Auth patterns after Auth.js migration — session, client, adapter, admin roles, permissions
+globs: src/auth.ts,src/lib/auth-client.ts,src/lib/auth/**,src/proxy.ts,src/components/auth/**,src/app/api/auth/**,src/db/schema/user.ts
+alwaysApply: false
+---
+
+# Better Auth (Indie Kit)
+
+Full migration workflow: Cursor command **`migrate-to-better-auth`** (`.cursor/commands/migrate-to-better-auth.md`).
+
+## Server session
+
+```typescript
+import { auth, type AuthSession } from "@/auth";
+
+const session = await auth.api.getSession({ headers: req.headers });
+// or in RSC: headers: await headers()
+```
+
+## Client
+
+```typescript
+import { authClient } from "@/lib/auth-client";
+// signIn.social | signIn.email | signIn.magicLink | signUp.email | signOut
+```
+
+Never `useSession` from `next-auth/react`. Use `useUser()` for profile data.
+
+## Drizzle adapter (critical)
+
+`user.modelName` is `"app_user"` → schema key must be `app_user: users`, not `user: users`.
+
+## Redirects
+
+Use `redirectToSignIn(buildCallbackUrl(path, searchParams))` — not bare `redirect("/sign-in")`.
+
+## Env
+
+- `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` (not `NEXTAUTH_*`)
+
+## Existing DB upgrade
+
+```bash
+psql "$DATABASE_URL" -f drizzle/upgrades/0000_backfill_app_user.sql
+psql "$DATABASE_URL" -f drizzle/upgrades/0001_better_auth_migration.sql
+pnpm db:migrate
+```
+
+Fresh DB: `pnpm db:migrate` only.
+
+## Admin plugin — roles & custom permissions
+
+Docs: https://better-auth.com/docs/plugins/admin#roles
+
+Default (no custom AC): `app_user.role` is `admin` or `user`. Super-admin routes use `withSuperAdminAuthRequired`.
+
+### Custom permissions (forks / advanced)
+
+1. Define statement + access controller in e.g. `src/auth/permissions.ts`:
+
+```typescript
+import { createAccessControl } from "better-auth/plugins/access";
+import { defaultStatements, adminAc } from "better-auth/plugins/admin/access";
+
+export const statement = {
+  ...defaultStatements,
+  project: ["create", "update", "delete"],
+} as const;
+
+export const ac = createAccessControl(statement);
+
+export const user = ac.newRole({ project: ["create"] });
+export const admin = ac.newRole({ project: ["create", "update"], ...adminAc.statements });
+```
+
+2. Pass to **both** server and client plugins:
+
+```typescript
+admin({ ac, roles: { admin, user, myCustomRole } })
+adminClient({ ac, roles: { admin, user, myCustomRole } })
+```
+
+3. Check permissions — do not hand-roll role checks for admin features:
+
+```typescript
+await auth.api.userHasPermission({
+  body: { userId, permission: { project: ["create"] } },
+});
+```
+
+4. **`adminRoles`**: only when **not** using custom AC. With custom AC, permissions come from `ac` + `roles`.
+
+5. Multiple roles on one user: comma-separated in `app_user.role`.
+
+## Organization ACL (B2B Kit only)
+
+B2B uses `src/auth/org-permissions.ts` with Better Auth organization plugin. See b2b-kit `.cursor/rules/better-auth.mdc` for `orgPerm` bundles and membership-only vs permission-gated routes.
+
+## Do not add
+
+- Custom NextAuth routes or `Session` types
+- `bcryptjs` / custom password helpers
+- Legacy signup/reset API routes (Better Auth handles natively)
+- Custom zod enums mirroring Better Auth default admin/user roles

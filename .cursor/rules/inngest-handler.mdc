@@ -1,0 +1,14 @@
+---
+description: Inngest durable functions — SDK v4 patterns, file layout, triggers, steps.
+globs: src/lib/inngest/**,src/app/api/inngest/**
+alwaysApply: false
+---
+
+- Use the **TypeScript SDK v4** API: `createFunction({ id, triggers, ...opts }, handler)` — triggers belong in the **first** argument, not a separate second-arg trigger object.
+- **Client** ([client.ts](mdc:src/lib/inngest/client.ts)): only `new Inngest({ id, isDev, middleware? })`. Do not put `EventSchemas` or a global event map on the client.
+- **Function modules** ([functions/](mdc:src/lib/inngest/functions)): colocate `eventType("...", { schema: staticSchema<...>() })` with each function; use `triggers: [thatEvent]`. Export the `eventType` if other code needs `inngest.send(event.create({ ... }))`.
+- **Cron**: `triggers: { cron: "..." }` (no `eventType`).
+- **Register** every function in [functions/index.ts](mdc:src/lib/inngest/functions/index.ts).
+- **Serve** via [api/inngest/route.ts](mdc:src/app/api/inngest/route.ts) with `serve({ client: inngest, functions })`.
+- Full rules, examples, and anti-patterns: [.claude/skills/inngest-handler/SKILL.md](mdc:.claude/skills/inngest-handler/SKILL.md) and [reference.md](mdc:.claude/skills/inngest-handler/reference.md).
+- Docs: [TypeScript](https://www.inngest.com/docs/typescript), [v3 → v4 migration](https://www.inngest.com/docs/reference/typescript/v4/migrations/v3-to-v4).
