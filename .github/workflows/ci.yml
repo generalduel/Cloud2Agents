@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   build:
-    if: github.repository_owner == 'indie-kit'
+    if: github.repository_owner == 'indie-kit' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       NEXT_TELEMETRY_DISABLED: "1"
